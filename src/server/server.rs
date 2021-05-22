@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use rand::Rng;
-
 use sodiumoxide::crypto::pwhash::argon2id13;
 use sodiumoxide::crypto::secretbox;
 use sodiumoxide::crypto::pwhash::argon2id13::Salt;
@@ -17,8 +16,8 @@ use crate::elements::{user::User, challenge::Challenge, google_secret::GoogleSec
 
 const USERNAME : &str = "kurisukun";
 const PASSWORD : &str = "MyPassword";
-
 const TOKEN_PATH: &str = "./src/server/two_factors.json";
+const VAULT_PATH: &str = "./src/server/vault";
 
 lazy_static! {
 
@@ -87,7 +86,7 @@ fn gen_secret(auth: &GoogleAuthenticator) -> String{
 }
 
 pub fn begin_two_factors() {
-    println!("\n### Enabling the two factors ###");
+    println!("\n### Authentication with two factors ###");
 
     if !Path::new(TOKEN_PATH).exists(){
         let google_auth = GoogleAuthenticator::new();
@@ -110,4 +109,17 @@ pub fn begin_two_factors() {
 
         println!("Or go to this link and scan the QR Code: {}", qr_code);
     }
+}
+
+pub fn list_files(){
+    let paths = fs::read_dir(VAULT_PATH).unwrap();
+
+    println!("List of the files:");
+    for path in paths {
+        let p = path.unwrap().path().display().to_string();
+        let pos = p.rfind('/').unwrap() + 1;
+        let filename = p[pos..p.len()].to_string();
+        println!("{}", filename);
+    }
+    print!("\n");
 }
