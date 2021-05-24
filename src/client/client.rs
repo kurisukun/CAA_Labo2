@@ -32,7 +32,7 @@ pub fn send_response(salt: Salt, challenge: u64) -> Tag{
 
     let password = ask_user("Enter your password: ");
 
-    argon2id13::derive_key(kb, password.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
+    argon2id13::derive_key(kb, password.as_bytes(), &salt, argon2id13::OPSLIMIT_SENSITIVE, argon2id13::MEMLIMIT_SENSITIVE).unwrap();
 
 
     let tag = authenticate(&challenge.to_be_bytes(), &Key::from_slice(kb).unwrap());

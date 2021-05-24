@@ -27,7 +27,7 @@ lazy_static! {
         let salt = argon2id13::gen_salt();
         let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
         let secretbox::Key(ref mut kb) = k;
-        argon2id13::derive_key(kb, PASSWORD.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
+        argon2id13::derive_key(kb, PASSWORD.as_bytes(), &salt, argon2id13::OPSLIMIT_SENSITIVE, argon2id13::MEMLIMIT_SENSITIVE).unwrap();
 
         let mut map = HashMap::new();
         map.insert(USERNAME.to_string(), User::new(*kb, salt));
