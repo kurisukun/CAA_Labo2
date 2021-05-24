@@ -20,7 +20,7 @@ const VAULT_PATH: &str = "./src/server/vault/";
 
 lazy_static! {
     static ref DB: HashMap<String, User> = {
-        const USERNAME: &str = "kurisukun";
+        const USERNAME: &str = "caa_labo2";
         const PASSWORD: &str = "MyPassword";
         let salt = argon2id13::gen_salt();
         let mut k = secretbox::Key([0; secretbox::KEYBYTES]);

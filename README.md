@@ -56,6 +56,14 @@ Il était demandé d'effectuer une authentification basée sur un challenge-resp
 
 
 
+##### **Compte existant:** 
+
+**username: **caa_labo2 
+
+**Password:** MyPassword
+
+
+
 #### Chiffrement
 
 Chaque fichier est chiffré via une clé dérivée produite à l'aide d'argon2 avec AES-GCM-SIV. À chaque fois que l'utilisateur upload un fichier dans le vault, le serveur ajoute dans sa base de données le nom chiffré du fichier, le sel qui a permis à argon2 de produire la clé dérivée et le nonce qu'a besoin AES-GCM-SIV pour le chiffrement. 
@@ -95,6 +103,10 @@ lazy_static! {
 Cette partie a été faite pour simplifier la programmation étant donné qu'il n'y a pas d'authentification implémentée, car je pars du principe que l'utilisateur existe déjà dans la base de données du serveur.
 
 
+
+### Pour tester
+
+Créer des fichiers dans le dossier `/src/client/files` et commencer à utiliser le programme. Il y a toujours le fichier `3.txt` (avec un message sympahique dedans :)).
 
 
 
