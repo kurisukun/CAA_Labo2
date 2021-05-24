@@ -58,7 +58,7 @@ Il était demandé d'effectuer une authentification basée sur un challenge-resp
 
 ##### **Compte existant:** 
 
-**username: **caa_labo2 
+**username:** caa_labo2 
 
 **Password:** MyPassword
 
