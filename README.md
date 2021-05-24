@@ -33,13 +33,13 @@ Le choix des constantes est une partie importante et j'ai appliqué la méthode 
 
 Je suis donc arrivé à:
 
-**Degré de parallélisation:** 4 threads lancés simultanément. Cela est représenté dans le code par le paramètre `OPSLIMIT_SENSITIVE`.
+**Degré de parallélisation:** 2 threads lancés simultanément. Cela est représenté dans le code par le paramètre `OPSLIMIT_INTERACTIVE`.
 
-**Utilisation de la mémoire:** 1GB représenté dans le code par le paramètre `OPSLIMIT_SENSITIVE`. 
+**Utilisation de la mémoire:** ~67MB représenté dans le code par le paramètre `OPSLIMIT_INTERACTIVE`. 
 
 **Taille de sel:** 128 bits
 
-**Temps d'exécution:** 1s car considéré comme une web app (aussi indiqué dans la documentation du crate d'argon2id).
+**Temps d'exécution:** 1s environ car considéré comme une web app 
 
 
 

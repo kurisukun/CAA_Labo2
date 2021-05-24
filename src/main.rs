@@ -37,7 +37,7 @@ fn main() {
                     nonce_enc_filename,
                 );
             }
-            Menu::Download => {
+            Menu::Read => {
                 let filename = ask_file();
                 match send_file_infos(filename.as_str()) {
                     Ok(dl) => {

@@ -29,8 +29,8 @@ lazy_static! {
             kb,
             PASSWORD.as_bytes(),
             &salt,
-            argon2id13::OPSLIMIT_SENSITIVE,
-            argon2id13::MEMLIMIT_SENSITIVE,
+            argon2id13::OPSLIMIT_INTERACTIVE,
+            argon2id13::MEMLIMIT_INTERACTIVE,
         )
         .unwrap();
 

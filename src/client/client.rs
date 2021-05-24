@@ -1,5 +1,6 @@
 use aead::{generic_array::GenericArray, Aead, Error, NewAead};
 use aes_gcm::Aes256Gcm;
+use argon2id13::{MEMLIMIT_INTERACTIVE, OPSLIMIT_INTERACTIVE};
 use hmacsha256::authenticate;
 use rand::RngCore;
 use read_input::prelude::*;
@@ -33,8 +34,8 @@ pub fn send_response(salt: Salt, challenge: u64) -> Tag {
         kb,
         password.as_bytes(),
         &salt,
-        argon2id13::OPSLIMIT_SENSITIVE,
-        argon2id13::MEMLIMIT_SENSITIVE,
+        argon2id13::OPSLIMIT_INTERACTIVE,
+        argon2id13::MEMLIMIT_INTERACTIVE,
     )
     .unwrap();
 
@@ -86,6 +87,8 @@ fn decrypt(ciphertext: &str, k: [u8; 32], nonce: [u8; 12]) -> Result<String, Err
         return Err(e);
     }
     let plaintext = decryption_result.unwrap();
+
+    //It's the only way I found to get a String from the input of the encryption and the decryption...
     let plaintext_b64 = base64::encode(&plaintext);
     let plaintext = base64::decode(&plaintext_b64).unwrap();
     Ok(str::from_utf8(&plaintext).unwrap().to_string())
@@ -138,9 +141,9 @@ pub fn send_file_to_upload() -> (String, String, Salt, [u8; 12], [u8; 12]) {
     thread::sleep(time::Duration::from_secs(2));
 
     fs::write(&new_path, &enc_content).expect("Unable to write file");
+        //Ensures the program has the time to write in the file
     thread::sleep(time::Duration::from_secs(2));
 
-    println!("{:?}", (&enc_filename, &new_path, salt, nonce1, nonce2));
     (enc_filename, new_path, salt, nonce1, nonce2)
 }
 
@@ -154,7 +157,6 @@ pub fn read_file(file: Files, content: &str) {
     let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
     let secretbox::Key(ref mut kb) = k;
 
-    //TODO match it
     argon2id13::derive_key(
         kb,
         password.as_bytes(),

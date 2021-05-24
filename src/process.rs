@@ -12,8 +12,8 @@ pub enum Menu {
     ListFiles,
     #[strum(serialize = "Upload", serialize = "upload", serialize = "2")]
     Upload,
-    #[strum(serialize = "Download", serialize = "download", serialize = "3")]
-    Download,
+    #[strum(serialize = "Read", serialize = "read", serialize = "3")]
+    Read,
     #[strum(serialize = "Quit", serialize = "quit", serialize = "4")]
     Quit,
 }
@@ -23,7 +23,7 @@ fn menu() {
     println!("2. Upload a file into the vault ({:?})", Menu::Upload);
     println!(
         "3. Read content of a file in the vault ({:?})",
-        Menu::Download
+        Menu::Read
     );
     println!("4. Quit the program ({:?})", Menu::Quit);
     println!("\n");
