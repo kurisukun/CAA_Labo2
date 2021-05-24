@@ -21,10 +21,7 @@ pub enum Menu {
 fn menu() {
     println!("1. List the files in the vault ({:?})", Menu::ListFiles);
     println!("2. Upload a file into the vault ({:?})", Menu::Upload);
-    println!(
-        "3. Read content of a file in the vault ({:?})",
-        Menu::Read
-    );
+    println!("3. Read content of a file in the vault ({:?})", Menu::Read);
     println!("4. Quit the program ({:?})", Menu::Quit);
     println!("\n");
 }

@@ -1,6 +1,5 @@
 use aead::{generic_array::GenericArray, Aead, Error, NewAead};
 use aes_gcm::Aes256Gcm;
-use argon2id13::{MEMLIMIT_INTERACTIVE, OPSLIMIT_INTERACTIVE};
 use hmacsha256::authenticate;
 use rand::RngCore;
 use read_input::prelude::*;
@@ -141,7 +140,7 @@ pub fn send_file_to_upload() -> (String, String, Salt, [u8; 12], [u8; 12]) {
     thread::sleep(time::Duration::from_secs(2));
 
     fs::write(&new_path, &enc_content).expect("Unable to write file");
-        //Ensures the program has the time to write in the file
+    //Ensures the program has the time to write in the file
     thread::sleep(time::Duration::from_secs(2));
 
     (enc_filename, new_path, salt, nonce1, nonce2)
