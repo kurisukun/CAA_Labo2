@@ -13,8 +13,13 @@ use crate::client::client::{send_file_to_upload, ask_file};
 
 fn main() {
     
-    //challenge_response();
-    //two_factors();
+    if !challenge_response(){
+        return;
+    }
+
+    if !two_factors(){
+        return;
+    }
 
 
     loop {

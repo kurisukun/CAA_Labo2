@@ -8,7 +8,7 @@ use sodiumoxide::crypto::secretbox;
 use sodiumoxide::crypto::auth::hmacsha256::{Key, Tag};
 use std::{path::Path};
 use std::fs;
-use aead::{generic_array::GenericArray, Aead, NewAead};
+use aead::{Aead, Error, NewAead, generic_array::GenericArray};
 use aes_gcm::Aes256Gcm; 
 use std::str;
 use std::{thread, time};
@@ -17,21 +17,12 @@ use crate::elements::files::Files;
 
 const FILES_PATH: &str = "./src/client/files/";
 
-pub fn send_username() -> String{
-
-    let username: String = input()
-        .msg("Please enter your username: ")
+pub fn ask_user(msg: &str) -> String{
+    let input: String = input()
+        .repeat_msg(msg)
         .get();
 
-    username
-}
-
-fn ask_password() -> String{
-    let password: String = input()
-    .msg("Please enter your password: ")
-    .get();
-
-    password
+    input
 }
 
 pub fn send_response(salt: Salt, challenge: u64) -> Tag{
@@ -39,7 +30,7 @@ pub fn send_response(salt: Salt, challenge: u64) -> Tag{
     let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
     let secretbox::Key(ref mut kb) = k;
 
-    let password = ask_password();
+    let password = ask_user("Enter your password: ");
 
     argon2id13::derive_key(kb, password.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
 
@@ -49,17 +40,7 @@ pub fn send_response(salt: Salt, challenge: u64) -> Tag{
     tag
 }
 
-pub fn send_token() -> String{
-    let input_token: String = input()
-    .repeat_msg("Please enter your two factors authentication token: ")
-    /*.add_err_test(
-        |m: &String| syntatic_validation_google_token(m),
-        "Error: the format is not respected (only 6 numbers) ",
-    )*/
-    .get();
 
-    input_token
-}
 
 fn list_files(){
     let paths = fs::read_dir(FILES_PATH).unwrap();
@@ -92,19 +73,23 @@ fn encrypt(text: &str, k:[u8; 32]) -> (String, [u8; 12]) {
     (ciphertext_b64, nonce)
 }
 
-fn decrypt(ciphertext: &str, k: [u8; 32], nonce: [u8; 12]) -> String{
+fn decrypt(ciphertext: &str, k: [u8; 32], nonce: [u8; 12]) -> Result<String, Error> {
     let aes_k = GenericArray::clone_from_slice(&k);
     let aead = Aes256Gcm::new(aes_k);
     let aes_nonce = GenericArray::from_slice(&nonce);
 
     let ciphertext = base64::decode(ciphertext).unwrap();
-    let plaintext = aead
-        .decrypt(aes_nonce, ciphertext.as_ref())
-        .expect("decryption failure!");
+    let decryption_result = aead
+        .decrypt(aes_nonce, ciphertext.as_ref());
 
+    if let Err(e) = decryption_result{
+        println!("Error: decryption failed!");
+        return Err(e);
+    }    
+    let plaintext = decryption_result.unwrap();
     let plaintext_b64 = base64::encode(&plaintext);
     let plaintext = base64::decode(&plaintext_b64).unwrap();
-    str::from_utf8(&plaintext).unwrap().to_string()
+    Ok(str::from_utf8(&plaintext).unwrap().to_string())
 }
 
 pub fn ask_file() -> String{
@@ -131,7 +116,7 @@ pub fn send_file_to_upload() -> (String, String, Salt, [u8; 12], [u8; 12]){
     }
 
     //The user can choose any password
-    let password = ask_password();
+    let password = ask_user("Enter the password you want to encrypt the file: ");
     let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
     let secretbox::Key(ref mut kb) = k;
     argon2id13::derive_key(kb, password.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
@@ -140,14 +125,9 @@ pub fn send_file_to_upload() -> (String, String, Salt, [u8; 12], [u8; 12]){
     let content = fs::read_to_string(full_path.clone()).unwrap();
 
     let (enc_content, nonce1) = encrypt(content.as_str(), *kb);
-    let dec_content = decrypt(&enc_content, *kb, nonce1);
 
     let (enc_filename, nonce2) = encrypt(input_file_name.as_str(), *kb);
-    let dec_filename = decrypt(&enc_filename, *kb, nonce2);
     let new_path = FILES_PATH.to_owned() + &enc_filename.to_owned();
-    println!("file {} is ENC: {}", enc_filename, enc_content);
-    println!("file {} is DEC: {}", dec_filename, dec_content);
-    println!("{} {}", full_path, Path::new(&full_path).exists());
 
     fs::rename(&full_path, &new_path).unwrap();
     //Ensures the program has the time to rename the file 
@@ -166,16 +146,29 @@ pub fn read_file(file: Files, content: &str){
     let salt = file.get_salt();
     let nonce_enc = file.get_nonce_enc();
     let nonce_enc_filename = file.get_nonce_enc_filename();
-    let password = ask_password();
-    println!("CLIENT: {:?} {}", file, content);
+    let password = ask_user("Enter the password you used to encrypt the file: ");
+
+
     let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
     let secretbox::Key(ref mut kb) = k;
+
+    //TODO match it
     argon2id13::derive_key(kb, password.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
 
 
-    let dec_filename = decrypt(filename, *kb, nonce_enc_filename);
-    let dec_content = decrypt(content, *kb, nonce_enc);
+    let dec_filename_res = decrypt(filename, *kb, nonce_enc_filename);
 
+    if let Err(_) = dec_filename_res{
+        return;
+    }
+    let dec_filename = dec_filename_res.unwrap();
+
+
+    let dec_content_res = decrypt(content, *kb, nonce_enc);
+    if let Err(_) = dec_content_res{
+        return;
+    }
+    let dec_content = dec_content_res.unwrap();
 
     println!("File {}: ", dec_filename);
     println!("{}", dec_content);

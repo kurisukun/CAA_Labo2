@@ -10,14 +10,11 @@ use sodiumoxide::crypto::auth::hmacsha256::authenticate;
 use google_authenticator::{ErrorCorrectionLevel, GoogleAuthenticator};
 use std::path::Path;
 use std::fs;
-use std::error::Error;
 
 
 use crate::elements::{user::User, challenge::Challenge, google_secret::GoogleSecret};
 use crate::elements::files::Files;
 
-const USERNAME : &str = "kurisukun";
-const PASSWORD : &str = "MyPassword";
 const TOKEN_PATH: &str = "./src/server/two_factors.json";
 const FILES_PATH: &str = "./src/server/files/";
 const VAULT_PATH: &str = "./src/server/vault/";
@@ -25,14 +22,15 @@ const VAULT_PATH: &str = "./src/server/vault/";
 lazy_static! {
 
     static ref DB : HashMap<String, User> = {
-
+        const USERNAME: &str = "kurisukun";
+        const PASSWORD : &str = "MyPassword";
         let salt = argon2id13::gen_salt();
         let mut k = secretbox::Key([0; secretbox::KEYBYTES]);
         let secretbox::Key(ref mut kb) = k;
         argon2id13::derive_key(kb, PASSWORD.as_bytes(), &salt, argon2id13::OPSLIMIT_INTERACTIVE, argon2id13::MEMLIMIT_INTERACTIVE).unwrap();
 
         let mut map = HashMap::new();
-        map.insert(USERNAME.to_string(), User::new(USERNAME.to_string(), *kb, salt));
+        map.insert(USERNAME.to_string(), User::new(*kb, salt));
 
         map
     };
@@ -43,7 +41,6 @@ pub fn check_user(username: &str) -> Result<(Salt, u64, Challenge), ()>{
     match DB.get::<str>(username){
         Some(user) => {
             let mut rng = rand::thread_rng();
-            let username = user.get_username();
             let password = user.get_password();
             let salt = user.get_salt();
             let challenge: u64 = rng.gen();
@@ -128,7 +125,6 @@ pub fn list_files(){
 
 pub fn upload_file(file_name: &str, file: &str, salt: Salt, nonce_enc: [u8; 12], nonce_enc_filename: [u8;12]){
 
-    println!("SERV: {} {:?} {:?}", file, nonce_enc, nonce_enc_filename);
     println!("Uploading file.....");
     let new_path = VAULT_PATH.to_owned() + file_name;
     fs::rename(file, new_path).unwrap();
@@ -144,13 +140,8 @@ pub fn send_file_infos(filename: &str) -> Result<(String, Files), std::io::Error
     let path = VAULT_PATH.to_owned() + filename;
     let content = fs::read_to_string(&path)?;
     let info_path = FILES_PATH.to_owned() + filename + ".json";
-    println!("SERV: {}", info_path);
     let f = fs::read_to_string(info_path).expect("Unable to read file");
     let file: Files = serde_json::from_str(&f).unwrap();
 
     Ok((content, file))
-    //let f: Files = serde_json::from_str(&s).unwrap();
-    //println!("SERV {:?}", f);
-    //let content = fs::read_to_string(path).expect("Unable to read file");
-    
 }

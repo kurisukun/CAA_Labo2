@@ -2,7 +2,7 @@ use strum_macros::EnumString;
 use read_input::prelude::*;
 use std::str::FromStr;
 
-use crate::client::client::{send_username, send_response, send_token};
+use crate::client::client::{ask_user, send_response};
 use crate::server::server::{check_user, check_response, begin_two_factors, verify_secret};
 use crate::validation::validation::check_cmd_syntax;
 
@@ -20,8 +20,8 @@ pub enum Menu{
 
 fn menu(){
     println!("1. List the files in the vault ({:?})", Menu::ListFiles);
-    println!("2. Upload a file in the vault ({:?})", Menu::Upload);
-    println!("3. Download a file in the vault ({:?})", Menu::Download);
+    println!("2. Upload a file into the vault ({:?})", Menu::Upload);
+    println!("3. Read content of a file in the vault ({:?})", Menu::Download);
     println!("4. Quit the program ({:?})", Menu::Quit);
     println!("\n");
 }
@@ -50,9 +50,9 @@ pub fn ask_command() -> Menu{
 }
 
 
-pub fn challenge_response(){
+pub fn challenge_response() -> bool{
 
-    let username = send_username();
+    let username = ask_user("Enter your username: ");
     
     match check_user(username.as_str()){
         Ok(t) => {
@@ -61,24 +61,28 @@ pub fn challenge_response(){
 
             if check_response(response, challenge_computed){
                 println!("*Challenge-response passed*");
+                return true;
             }
             else{
-                println!("Wrong response given!");
+                println!("Error: login failed");
+                return false;
             }
         }
         Err(_) => {
-            println!("Error: user not found");
+            println!("Error: login failed");
+            return false;
         }
     }
 }
 
-pub fn two_factors(){
+pub fn two_factors() -> bool{
     begin_two_factors();
-    let token = send_token();
+    let token = ask_user("Enter your token: ");
     if verify_secret(&token){
         println!("You are connected! You can now look for your files");
-        return;
+        return true;
     }
 
     println!("Error: the token is incorrect");
+    false
 }
