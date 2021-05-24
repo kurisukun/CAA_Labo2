@@ -76,6 +76,8 @@ Lorsque l'utilisateur choisit un fichier et veut lire le contenu du fichier, le 
 
 Cette manière de faire permet à un utilisateur de ne nécessiter que d'un seul mot de passe pour déchiffrer tous les fichiers qu'il uploadera dans son vault, ce qui change c'est la clé dérivée. De plus, de cette façon, même si une clé qui permet le déchiffrement d'un des fichiers est leakée, celle-ci sera inutile pour le déchiffrement de tous les autres, ce qui importe étant le mot de passe master.
 
+Il est bon de préciser que dans le code, l'utilisateur peut entrer le mot de passe qu'il souhaite et pas uniquement celui qui l'a servi à se connecter. Cette fonctionnalité a été choisie délibérément pour tout de même laisser le choix du mot de passe, même si un seul et uniquement mot de passe peut être choisi sans que cela ne pose de problème pour la sécurité.
+
 
 
 ### Disclaimer
