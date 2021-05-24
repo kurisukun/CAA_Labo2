@@ -10,14 +10,17 @@ use sodiumoxide::crypto::auth::hmacsha256::authenticate;
 use google_authenticator::{ErrorCorrectionLevel, GoogleAuthenticator};
 use std::path::Path;
 use std::fs;
+use std::error::Error;
 
 
 use crate::elements::{user::User, challenge::Challenge, google_secret::GoogleSecret};
+use crate::elements::files::Files;
 
 const USERNAME : &str = "kurisukun";
 const PASSWORD : &str = "MyPassword";
 const TOKEN_PATH: &str = "./src/server/two_factors.json";
-const VAULT_PATH: &str = "./src/server/vault";
+const FILES_PATH: &str = "./src/server/files/";
+const VAULT_PATH: &str = "./src/server/vault/";
 
 lazy_static! {
 
@@ -34,7 +37,6 @@ lazy_static! {
         map
     };
 }
-
 
 pub fn check_user(username: &str) -> Result<(Salt, u64, Challenge), ()>{
     
@@ -122,4 +124,33 @@ pub fn list_files(){
         println!("{}", filename);
     }
     print!("\n");
+}
+
+pub fn upload_file(file_name: &str, file: &str, salt: Salt, nonce_enc: [u8; 12], nonce_enc_filename: [u8;12]){
+
+    println!("SERV: {} {:?} {:?}", file, nonce_enc, nonce_enc_filename);
+    println!("Uploading file.....");
+    let new_path = VAULT_PATH.to_owned() + file_name;
+    fs::rename(file, new_path).unwrap();
+
+    let f = Files::new(file_name.to_string(), salt, nonce_enc, nonce_enc_filename);
+    let db_file = FILES_PATH.to_owned() + file_name + ".json";
+    println!("File {} created", db_file);
+    let serialized = serde_json::to_string(&f).unwrap();
+    fs::write(db_file, serialized).expect("Unable to write file");
+}
+
+pub fn send_file_infos(filename: &str) -> Result<(String, Files), std::io::Error> {
+    let path = VAULT_PATH.to_owned() + filename;
+    let content = fs::read_to_string(&path)?;
+    let info_path = FILES_PATH.to_owned() + filename + ".json";
+    println!("SERV: {}", info_path);
+    let f = fs::read_to_string(info_path).expect("Unable to read file");
+    let file: Files = serde_json::from_str(&f).unwrap();
+
+    Ok((content, file))
+    //let f: Files = serde_json::from_str(&s).unwrap();
+    //println!("SERV {:?}", f);
+    //let content = fs::read_to_string(path).expect("Unable to read file");
+    
 }
